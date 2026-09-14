@@ -31,10 +31,6 @@ def list_my_contracts(
     )
 
 
-@router.get("/Get a contract", response_model=ContractOut, summary="Get a contract you participate in")
-def get_contract(contract_id: uuid.UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return contract_service.get_contract_for_user(db, contract_id, current_user)
-
 
 @router.patch(
     "/Contract Status",
