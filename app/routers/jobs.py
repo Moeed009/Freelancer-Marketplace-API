@@ -24,14 +24,14 @@ def _serialize(job: Job) -> JobOut:
     return out
 
 
-@router.post("/Create a job", response_model=JobOut, status_code=status.HTTP_201_CREATED, summary="Create a job posting (CLIENT only)")
+@router.post("/Create", response_model=JobOut, status_code=status.HTTP_201_CREATED, summary="Create a job posting (CLIENT only)")
 def create_job(payload: JobCreateRequest, client: User = Depends(require_client), db: Session = Depends(get_db)):
     job = job_service.create_job(db, client, payload)
     return _serialize(job)
 
 
 @router.get(
-    "/Search Jobs",
+    "/Search",
     response_model=Page[JobOut],
     summary="Search/browse published jobs (public), or pass mine=true to list jobs you posted (CLIENT only, any status)",
 )
@@ -79,8 +79,7 @@ def search_jobs(
     )
 
 
-
-@router.patch("/Update a job", response_model=JobOut, summary="Update a job you own(CLIENT only)")
+@router.patch("/Update", response_model=JobOut, summary="Update a job you own(CLIENT only)")
 def update_job(
     job_id: uuid.UUID,
     payload: JobUpdateRequest,
@@ -91,7 +90,7 @@ def update_job(
     return _serialize(job)
 
 
-@router.patch("/Status", response_model=JobOut, summary="Publish or close a job you own(CLIENT only)")
+@router.patch("/status", response_model=JobOut, summary="Publish or close a job you own(CLIENT only)")
 def change_job_status(
     job_id: uuid.UUID,
     payload: JobStatusUpdateRequest,

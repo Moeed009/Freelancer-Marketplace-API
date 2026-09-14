@@ -41,22 +41,29 @@ def set_status(db: Session, job: Job, status: JobStatus) -> Job:
     db.commit()
     db.refresh(job)
     return job
-def get_all(db: Session) -> list[Job]:
-    query = select(Job).where(Job.status == JobStatus.PUBLISHED).order_by(Job.created_at.desc())
-    return db.execute(query).scalars().unique().all()
-def list_for_client(
-    db: Session, client_id: uuid.UUID, offset: int, limit: int
-) -> tuple[list[Job], int]:
-    query = select(Job).where(Job.client_id == client_id)
 
+
+def list_for_client(db: Session, client_id: uuid.UUID, offset: int, limit: int) -> tuple[list[Job], int]:
+    query = select(Job).where(Job.client_id == client_id)
     count_query = select(func.count()).select_from(query.with_only_columns(Job.id).subquery())
     total = db.execute(count_query).scalar_one()
-
-    query = query.order_by(Job.created_at.desc()).offset(offset).limit(limit)
-    items = db.execute(query).scalars().unique().all()
+    items = (
+        db.execute(query.order_by(Job.created_at.desc()).offset(offset).limit(limit))
+        .scalars()
+        .unique()
+        .all()
+    )
     return list(items), total
 
 
+def delete(db: Session, job: Job) -> None:
+    db.delete(job)
+    db.commit()
+
+
+def get_all(db: Session) -> list[Job]:
+    query = select(Job).where(Job.status == JobStatus.PUBLISHED).order_by(Job.created_at.desc())
+    return db.execute(query).scalars().unique().all()
 def search(
     db: Session,
     *,
