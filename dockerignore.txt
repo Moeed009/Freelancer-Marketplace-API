@@ -1,0 +1,13 @@
+.venv
+.env
+.git
+.gitignore
+.pytest_cache
+__pycache__
+*.pyc
+.python-version
+app/tests
+*.db
+*.sqlite3
+.DS_Store
+README.md
