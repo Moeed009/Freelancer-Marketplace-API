@@ -15,7 +15,7 @@ from app.services import contract_service
 router = APIRouter(prefix="", tags=["Contracts"])
 
 
-@router.get("/List contracts", response_model=Page[ContractOut], summary="List contracts I'm a participant of")
+@router.get("/List_contracts", response_model=Page[ContractOut], summary="List contracts I'm a participant of")
 def list_my_contracts(
     current_user: User = Depends(get_current_user),
     pagination: PaginationParams = Depends(),
@@ -33,7 +33,7 @@ def list_my_contracts(
 
 
 @router.patch(
-    "/Contract Status",
+    "/Contract_Status",
     response_model=ContractOut,
     summary=(
         "Complete (CLIENT only, all milestones APPROVED) or cancel (either participant, "
@@ -50,7 +50,7 @@ def update_contract_status(
 
 
 @router.delete(
-    "/Delete a contract",
+    "/delete_contract",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a contract, only while it is CANCELLED (either participant)",
 )

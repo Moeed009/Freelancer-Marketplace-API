@@ -19,9 +19,11 @@ def _make_job(
         budget_max=500,
         status=status,
     )
+
     db.add(job)
     db.commit()
     db.refresh(job)
+
     return job
 
 
@@ -37,7 +39,7 @@ def test_client_can_create_a_job(as_user, client_user):
         "skill_ids": [],
     }
 
-    response = c.post("/Create", json=payload)
+    response = c.post("/Create_job", json=payload)
 
     assert response.status_code == 201
 
@@ -59,7 +61,7 @@ def test_freelancer_cannot_create_a_job(as_user, freelancer_user):
         "skill_ids": [],
     }
 
-    response = c.post("/Create", json=payload)
+    response = c.post("/Create_job", json=payload)
 
     assert response.status_code == 403
 
@@ -86,7 +88,7 @@ def test_search_jobs_only_returns_published_by_default(
 
     c = as_user(freelancer_user)
 
-    response = c.get("/Search")
+    response = c.get("/Search_job")
 
     assert response.status_code == 200
 
@@ -129,7 +131,7 @@ def test_list_my_jobs_returns_jobs_of_any_status(
     c = as_user(client_user)
 
     response = c.get(
-        "/Search",
+        "/Search_job",
         params={"mine": "true"},
     )
 
@@ -148,7 +150,7 @@ def test_list_my_jobs_returns_jobs_of_any_status(
 
 def test_list_my_jobs_requires_login(anon_client):
     response = anon_client.get(
-        "/Search",
+        "/Search_job",
         params={"mine": "true"},
     )
 
@@ -162,7 +164,7 @@ def test_list_my_jobs_forbidden_for_freelancer(
     c = as_user(freelancer_user)
 
     response = c.get(
-        "/Search",
+        "/Search_job",
         params={"mine": "true"},
     )
 

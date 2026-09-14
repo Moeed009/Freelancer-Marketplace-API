@@ -18,7 +18,7 @@ router = APIRouter(tags=["Milestones"])
 
 
 @router.post(
-    "/Add a milestone",
+    "/Add_milestone",
     response_model=MilestoneOut,
     status_code=status.HTTP_201_CREATED,
     summary="Add a milestone to a contract (CLIENT only)",
@@ -33,7 +33,7 @@ def create_milestone(
 
 
 @router.get(
-    "/List milestones",
+    "/List_milestones",
     response_model=list[MilestoneOut],
     summary="List milestones for a contract you participate in",
 )
@@ -42,7 +42,7 @@ def list_milestones(contract_id: uuid.UUID, current_user: User = Depends(get_cur
 
 
 @router.patch(
-    "/Update a milestone",
+    "/Update_milestone",
     response_model=MilestoneOut,
     summary="Edit a milestone's details (title/description/amount/due_date) - CLIENT only, while PENDING",
 )
@@ -56,7 +56,7 @@ def update_milestone(
 
 
 @router.patch(
-    "/Milestone Status",
+    "/Milestone_Status",
     response_model=MilestoneOut,
     summary=(
         "Transition a milestone's status only (freelancer submits; client approves/rejects), "
@@ -73,7 +73,7 @@ def update_milestone_status(
 
 
 @router.delete(
-    "/Delete a milestone",
+    "/Delete_milestone",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a milestone, only while it is PENDING (CLIENT only)",
 )
@@ -82,7 +82,7 @@ def delete_milestone(milestone_id: uuid.UUID, client: User = Depends(require_cli
 
 
 @router.post(
-    "/Submit a deliverable file",
+    "/Submit_deliverable_file",
     response_model=MilestoneOut,
     summary="Submit a deliverable file for a milestone (FREELANCER only, moves status to SUBMITTED)",
 )

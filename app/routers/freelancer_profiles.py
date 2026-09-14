@@ -27,13 +27,13 @@ def _serialize(profile: FreelancerProfile) -> FreelancerProfileOut:
     return out
 
 
-@router.post("/Create my freelancer profile", response_model=FreelancerProfileOut, status_code=status.HTTP_201_CREATED, summary="Create my freelancer profile (one per user)")
+@router.post("/Create_freelancer_profile", response_model=FreelancerProfileOut, status_code=status.HTTP_201_CREATED, summary="Create my freelancer profile (one per user)")
 def create_my_profile(payload: FreelancerProfileCreate, current_user: User = Depends(require_freelancer), db: Session = Depends(get_db)):
     profile = profile_service.create_profile(db, current_user.id, payload)
     return _serialize(profile)
 
 
-@router.get("/own_freelancer_profile", response_model=FreelancerProfileOut, summary="Get my own freelancer profile")
+@router.get("/freelancer_profile", response_model=FreelancerProfileOut, summary="Get my own freelancer profile")
 def get_my_profile(current_user: User = Depends(require_freelancer), db: Session = Depends(get_db)):
     profile = profile_service.get_my_profile(db, current_user.id)
     return _serialize(profile)
@@ -69,7 +69,7 @@ def search_freelancer_profiles(
 
 
 @router.patch(
-    "/Update_profile",
+    "/Update_freelancer_profile",
     response_model=FreelancerProfileOut,
     summary="Partially update my freelancer profile - only send the fields you want to change",
 )
@@ -87,7 +87,7 @@ def update_my_profile(
 
 
 @router.delete(
-    "/Delete_profile",
+    "/Delete_freelancer_profile",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete my freelancer profile",
 )

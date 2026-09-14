@@ -83,7 +83,7 @@ async def login(payload: LoginRequest, response: Response, db: Session = Depends
     return _to_token_response(result)
 
 
-@router.post("/Refresh Token", summary="Exchange refresh cookie for a new access/refresh token pair (rotates both cookies)")
+@router.post("/Refresh_Token", summary="Exchange refresh cookie for a new access/refresh token pair (rotates both cookies)")
 async def refresh(request: Request, response: Response):
     refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
     if not refresh_token:

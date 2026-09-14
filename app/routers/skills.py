@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/List All skills",
+    "/List_skills",
     response_model=list[SkillOut],
     summary="List all reusable skills",
 )

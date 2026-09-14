@@ -16,7 +16,7 @@ router = APIRouter(tags=["Reviews"])
 
 
 @router.post(
-    "/Reviews",
+    "/Post_Reviews",
     response_model=ReviewOut,
     status_code=status.HTTP_201_CREATED,
     summary="Review the other participant of a completed contract (client reviews freelancer, or freelancer reviews client)",
@@ -31,7 +31,7 @@ def create_review(
 
 
 
-@router.get("/List reviews", response_model=Page[ReviewOut], summary="List reviews received by a user")
+@router.get("/List_reviews", response_model=Page[ReviewOut], summary="List reviews received by a user")
 def list_reviews_for_user(user_id: uuid.UUID, pagination: PaginationParams = Depends(), db: Session = Depends(get_db)):
     items, total = review_service.list_reviews_for_user(db, user_id, pagination.offset, pagination.page_size)
     return Page(
@@ -44,7 +44,7 @@ def list_reviews_for_user(user_id: uuid.UUID, pagination: PaginationParams = Dep
 
 
 @router.patch(
-    "/Update a review",
+    "/Update_review",
     response_model=ReviewOut,
     summary="Edit your own review's rating/comment (reviewer only)",
 )
@@ -58,7 +58,7 @@ def update_review(
 
 
 @router.delete(
-    "/Delete a review",
+    "/Delete_review",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete your own review (reviewer only)",
 )

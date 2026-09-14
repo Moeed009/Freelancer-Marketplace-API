@@ -17,7 +17,7 @@ router = APIRouter(tags=["Proposals"])
 
 
 @router.post(
-    "/Submit a proposal",
+    "/Submit_proposal",
     response_model=ProposalOut,
     status_code=status.HTTP_201_CREATED,
     summary="Submit a proposal for a job (FREELANCER only)",
@@ -32,7 +32,7 @@ def submit_proposal(
 
 
 @router.get(
-    "/List proposals",
+    "/received_proposals",
     response_model=Page[ProposalOut],
     summary="List proposals received for a job you own (CLIENT only)",
 )
@@ -53,7 +53,7 @@ def list_proposals_for_job(
 
 
 @router.get(
-    "/List my own submitted proposals",
+    "/List_proposals",
     response_model=Page[ProposalOut],
     summary="List my own submitted proposals (FREELANCER only)",
 )
@@ -74,7 +74,7 @@ def list_my_proposals(
 
 
 @router.post(
-    "/Accept a proposal",
+    "/Accept_proposal",
     response_model=ContractOut,
     summary="Accept a proposal (CLIENT only) - creates a contract and closes the job",
 )
@@ -83,7 +83,7 @@ def accept_proposal(proposal_id: uuid.UUID, client: User = Depends(require_clien
 
 
 @router.patch(
-    "/Status Update",
+    "/Status_Update",
     response_model=ProposalOut,
     summary="Reject (CLIENT, own job) or withdraw (FREELANCER, own proposal) a pending proposal",
 )
@@ -97,7 +97,7 @@ def update_proposal_status(
 
 
 @router.delete(
-    "/Delete a proposal",
+    "/Delete_proposal",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete your own proposal, only while it is PENDING (FREELANCER only)",
 )
