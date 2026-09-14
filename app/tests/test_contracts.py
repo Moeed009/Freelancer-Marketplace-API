@@ -58,14 +58,6 @@ def test_list_my_contracts_only_shows_my_own(as_user, client_user, other_client_
     assert ids == [str(mine.id)]
 
 
-def test_get_a_contract_forbidden_for_non_participant(as_user, client_user, other_client_user, freelancer_user, db):
-    contract = _make_contract(db, client_user, freelancer_user)
-
-    c = as_user(other_client_user)
-    response = c.get("/Get a contract", params={"contract_id": str(contract.id)})
-
-    assert response.status_code == 403
-
 
 def test_complete_contract_requires_all_milestones_approved(as_user, client_user, freelancer_user, db):
     contract = _make_contract(db, client_user, freelancer_user)

@@ -7,8 +7,7 @@ from app.models.enums import ContractStatus
 
 
 class ContractStatusUpdateRequest(BaseModel):
-    # Only COMPLETED (CLIENT, all milestones APPROVED) or CANCELLED (either
-    # participant, no milestone APPROVED yet) are accepted.
+    
     status: ContractStatus
 
 
