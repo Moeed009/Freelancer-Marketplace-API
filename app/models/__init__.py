@@ -8,7 +8,14 @@ from app.models.proposal import Proposal
 from app.models.contract import Contract
 from app.models.milestone import Milestone
 from app.models.review import Review
-
+from app.models.file_attachment import FileAttachment
+from app.models.notification import (
+    NotificationDelivery,
+    NotificationEvent,
+    NotificationPreference,
+    
+)
+from app.models.payment import Payment
 __all__ = [
     "User",
     "FreelancerProfile",
@@ -20,4 +27,9 @@ __all__ = [
     "Contract",
     "Milestone",
     "Review",
+    "NotificationEvent",
+    "NotificationDelivery",
+    "NotificationPreference",
+    "FileAttachment",
+    "Payment",
 ]

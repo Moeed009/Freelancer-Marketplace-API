@@ -27,6 +27,17 @@ class Milestone(Base):
     deliverable_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    submitted_at: Mapped[datetime | None] = mapped_column(
+    DateTime(timezone=True), nullable=True
+)
+
+    approved_at: Mapped[datetime | None] = mapped_column(
+    DateTime(timezone=True), nullable=True
+)
+
+    rejected_at: Mapped[datetime | None] = mapped_column(
+    DateTime(timezone=True), nullable=True
+)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

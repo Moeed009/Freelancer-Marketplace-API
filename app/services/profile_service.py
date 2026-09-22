@@ -67,11 +67,7 @@ def create_profile(db: Session, user_id: uuid.UUID, data: FreelancerProfileCreat
 
 
 def update_profile(db: Session, user_id: uuid.UUID, data: FreelancerProfileUpdate):
-    """True partial update: any field the client didn't include in the
-    request body (exclude_unset) is left completely untouched. skill_ids
-    only gets replaced if the client explicitly included it - sending
-    skill_ids: [] clears all skills, omitting it entirely leaves the
-    existing skills as-is."""
+    
     profile = get_my_profile(db, user_id)
 
     fields = data.model_dump(exclude_unset=True, exclude={"skill_ids"})

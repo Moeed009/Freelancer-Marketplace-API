@@ -13,9 +13,7 @@ class ProposalCreateRequest(BaseModel):
 
 
 class ProposalStatusUpdateRequest(BaseModel):
-    # Only REJECTED (by the job's client) or WITHDRAWN (by the freelancer
-    # who submitted it) are accepted here - ACCEPTED goes through the
-    # dedicated /accept endpoint since it also creates a contract.
+   
     status: ProposalStatus
 
 

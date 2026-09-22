@@ -3,9 +3,15 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ForbiddenError, NotFoundError, ValidationAppError
-from app.models.enums import ContractStatus
+from app.models.enums import ContractStatus, NotificationEventType
 from app.models.user import User
-from app.repositories import contract_repository, milestone_repository
+from app.repositories import contract_repository, job_repository, milestone_repository
+from app.services import notification_service
+
+
+def _job_title(db: Session, contract) -> str:
+    job = job_repository.get_by_id(db, contract.job_id)
+    return job.title if job else "your contract"
 
 
 def get_contract_or_404(db: Session, contract_id: uuid.UUID):
@@ -45,7 +51,20 @@ def complete_contract(db: Session, contract_id: uuid.UUID, client: User):
     if not milestone_repository.all_approved(db, contract.id):
         raise ValidationAppError("All milestones must be APPROVED before the contract can be completed.")
 
-    return contract_repository.complete(db, contract)
+    job_title = _job_title(db, contract)
+    completed = contract_repository.complete(db, contract)
+
+    for participant_id in (completed.client_id, completed.freelancer_id):
+        notification_service.emit(
+            NotificationEventType.CONTRACT_COMPLETED,
+            participant_id,
+            {"job_title": job_title},
+            idempotency_key=notification_service.build_idempotency_key(
+                NotificationEventType.CONTRACT_COMPLETED, completed.id, participant_id
+            ),
+        )
+
+    return completed
 
 
 def cancel_contract(db: Session, contract_id: uuid.UUID, user: User):
@@ -60,7 +79,20 @@ def cancel_contract(db: Session, contract_id: uuid.UUID, user: User):
             "This contract has approved milestones and can no longer be cancelled. Complete it instead."
         )
 
-    return contract_repository.cancel(db, contract)
+    job_title = _job_title(db, contract)
+    cancelled = contract_repository.cancel(db, contract)
+
+    for participant_id in (cancelled.client_id, cancelled.freelancer_id):
+        notification_service.emit(
+            NotificationEventType.CONTRACT_CANCELLED,
+            participant_id,
+            {"job_title": job_title},
+            idempotency_key=notification_service.build_idempotency_key(
+                NotificationEventType.CONTRACT_CANCELLED, cancelled.id, participant_id
+            ),
+        )
+
+    return cancelled
 
 
 def update_contract_status(db: Session, current_user: User, contract_id: uuid.UUID, new_status: ContractStatus):

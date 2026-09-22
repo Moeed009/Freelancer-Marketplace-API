@@ -16,13 +16,13 @@ from app.models import (
     job,
     job_skill,
     milestone,
+    notification,
+    payment,
     proposal,
     review,
     skill,
     user,
 )
-
-
 config = context.config
 
 

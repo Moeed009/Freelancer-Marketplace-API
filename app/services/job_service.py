@@ -1,18 +1,26 @@
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationAppError
-from app.models.enums import JobStatus
+from app.models.enums import JobStatus, NotificationEventType
 from app.models.user import User
 from app.repositories import job_repository, skill_repository
 from app.schemas.job import JobCreateRequest, JobUpdateRequest
+from app.services import notification_service
 
 
 _ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
     JobStatus.DRAFT: {JobStatus.PUBLISHED, JobStatus.CLOSED},
     JobStatus.PUBLISHED: {JobStatus.CLOSED},
     JobStatus.CLOSED: set(),
+}
+
+
+_STATUS_NOTIFICATIONS: dict[JobStatus, NotificationEventType] = {
+    JobStatus.PUBLISHED: NotificationEventType.JOB_PUBLISHED,
+    JobStatus.CLOSED: NotificationEventType.JOB_CLOSED,
 }
 
 
@@ -81,7 +89,27 @@ def change_status(db: Session, client: User, job_id: uuid.UUID, new_status: JobS
     if new_status not in allowed:
         raise ValidationAppError(f"Cannot transition job from {job.status.value} to {new_status.value}.")
 
-    return job_repository.set_status(db, job, new_status)
+    now = datetime.now(timezone.utc)
+
+    if new_status == JobStatus.PUBLISHED:
+        job.published_at = now
+    elif new_status == JobStatus.CLOSED:
+        job.closed_at = now
+
+    updated = job_repository.set_status(db, job, new_status)
+
+    event_type = _STATUS_NOTIFICATIONS.get(new_status)
+    if event_type is not None:
+        notification_service.emit(
+            event_type,
+            client.id,
+            {"job_title": updated.title},
+            idempotency_key=notification_service.build_idempotency_key(
+                event_type, updated.id, client.id
+            ),
+        )
+
+    return updated
 
 
 def list_my_jobs(db: Session, client: User, offset: int, limit: int):

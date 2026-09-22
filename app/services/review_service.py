@@ -3,9 +3,10 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationAppError
-from app.models.enums import ContractStatus
+from app.models.enums import ContractStatus, NotificationEventType
 from app.models.user import User
 from app.repositories import contract_repository, review_repository
+from app.services import notification_service
 from app.schemas.review import ReviewCreateRequest, ReviewUpdateRequest
 
 
@@ -21,15 +22,15 @@ def create_review(db: Session, reviewer: User, contract_id: uuid.UUID, data: Rev
     else:
         raise ForbiddenError("You are not a participant of this contract.")
 
-    # A review is allowed only after the related contract is completed.
+    
     if contract.status != ContractStatus.COMPLETED:
         raise ValidationAppError("Reviews can only be submitted for completed contracts.")
 
-    # Each permitted party can submit the review only once per contract.
+    
     if review_repository.get_by_contract_and_reviewer(db, contract_id, reviewer.id):
         raise ConflictError("You have already submitted a review for this contract.")
 
-    return review_repository.create(
+    review = review_repository.create(
         db,
         contract_id=contract_id,
         reviewer_id=reviewer.id,
@@ -37,6 +38,17 @@ def create_review(db: Session, reviewer: User, contract_id: uuid.UUID, data: Rev
         rating=data.rating,
         comment=data.comment,
     )
+
+    notification_service.emit(
+        NotificationEventType.REVIEW_RECEIVED,
+        reviewee_id,
+        {"reviewer_name": reviewer.full_name or "Your counterparty", "rating": str(review.rating)},
+        idempotency_key=notification_service.build_idempotency_key(
+            NotificationEventType.REVIEW_RECEIVED, review.id
+        ),
+    )
+
+    return review
 
 
 def get_review_or_404(db: Session, review_id: uuid.UUID):

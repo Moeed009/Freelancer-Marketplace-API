@@ -14,7 +14,7 @@ from app.schemas.user import UserOut, UserPublicOut, UserUpdateRequest
 router = APIRouter(prefix="", tags=["Users"])
 
 ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/png", "image/webp"}
-MAX_AVATAR_SIZE = 5 * 1024 * 1024  # 5 MB
+MAX_AVATAR_SIZE = 5 * 1024 * 1024  
 
 
 @router.get("/Account_Info", response_model=UserOut, summary="Get the authenticated user's own account")

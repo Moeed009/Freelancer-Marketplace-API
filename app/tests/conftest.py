@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+import app.db.database as database_module
 from app.core.exceptions import UnauthorizedError
 from app.db.base import Base
 from app.db.database import get_db
@@ -33,6 +34,14 @@ TestingSessionLocal = sessionmaker(
     autoflush=False,
     bind=engine,
 )
+
+# session_scope() (used by notification_service.emit() and the dispatcher)
+# opens its own sessions from app.db.database.SessionLocal directly - it is
+# NOT reached by app.dependency_overrides, which only affects FastAPI's
+# Depends(get_db). Without this line, emit() keeps talking to the real
+# settings.DATABASE_URL engine instead of this test database, so any user
+# created via the `db` fixture is invisible to it ("recipient not found").
+database_module.SessionLocal = TestingSessionLocal
 
 
 def _override_get_db() -> Iterator[Session]:
@@ -183,3 +192,43 @@ def as_user():
 @pytest.fixture
 def anon_client() -> Iterator[TestClient]:
     return TestClient(app)
+
+
+@pytest.fixture
+def email_provider():
+    """Fake EMAIL provider double for notification tests.
+
+    Swapped in for the real provider via app.notifications.providers'
+    registry (set_provider/reset_providers) so notification_service /
+    notification_dispatcher never make a real network call in tests.
+
+    - .sent      -> list of (destination, message) actually "delivered"
+    - .calls     -> total number of send() attempts (sent + failed)
+    - .script    -> optional queue of exceptions to raise instead of
+                    succeeding, one per call, in order (e.g. set this to
+                    [providers.TransientProviderError("...")] to simulate
+                    a failure on the next send()).
+    """
+    from app.models.enums import NotificationChannel
+    from app.notifications import providers
+
+    class FakeEmailProvider:
+        channel = NotificationChannel.EMAIL
+
+        def __init__(self):
+            self.sent: list[tuple[str, object]] = []
+            self.calls = 0
+            self.script: list[Exception] = []
+
+        def send(self, destination: str, message) -> None:
+            self.calls += 1
+            if self.script:
+                raise self.script.pop(0)
+            self.sent.append((destination, message))
+
+    fake = FakeEmailProvider()
+    providers.set_provider(NotificationChannel.EMAIL, fake)
+
+    yield fake
+
+    providers.reset_providers()

@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, Enum, ForeignKey, Index, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from datetime import datetime
 from app.db.base import Base
 from app.models.enums import JobStatus, RateType
 
@@ -30,6 +30,13 @@ class Job(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    published_at: Mapped[datetime | None] = mapped_column(
+    DateTime(timezone=True), nullable=True
+)
+
+    closed_at: Mapped[datetime | None] = mapped_column(
+    DateTime(timezone=True), nullable=True
+)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

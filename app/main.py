@@ -1,10 +1,45 @@
+from contextlib import asynccontextmanager
+import asyncio
+import time
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-import time
 
 from app.core.config import settings
 from app.core.exceptions import AppError
-from app.routers import (auth, users , freelancer_profiles , skills , jobs , proposals , contracts , milestones , reviews)
+from app.routers import (
+    auth,
+    users,
+    freelancer_profiles,
+    skills,
+    jobs,
+    proposals,
+    contracts,
+    milestones,
+    reviews,
+    files,
+    payments
+)
+from app.routers.notifications import router as notifications_router
+from app.services import notification_dispatcher
+from app.routers.analytics import router as analytics_router
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    stop_event = asyncio.Event()
+    worker_task = None
+
+    if settings.NOTIFICATION_WORKER_ENABLED:
+        worker_task = asyncio.create_task(
+            notification_dispatcher.worker_loop(stop_event)
+        )
+
+    yield
+
+    if worker_task is not None:
+        stop_event.set()
+        await worker_task
+
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -14,6 +49,7 @@ app = FastAPI(
         "Full workflow: jobs -> proposals -> contracts -> milestones -> reviews."
     ),
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 
@@ -46,6 +82,7 @@ def health_check() -> dict:
         "environment": settings.ENVIRONMENT,
     }
 
+
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(skills.router)
@@ -55,3 +92,7 @@ app.include_router(proposals.router)
 app.include_router(contracts.router)
 app.include_router(milestones.router)
 app.include_router(reviews.router)
+app.include_router(notifications_router)
+app.include_router(files.router)
+app.include_router(analytics_router)
+app.include_router(payments.router)

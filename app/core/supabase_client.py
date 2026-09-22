@@ -46,12 +46,3 @@ async def refresh_session(refresh_token: str) -> dict:
     return await _post("/token?grant_type=refresh_token", {"refresh_token": refresh_token})
 
 
-async def sign_out(access_token: str) -> None:
-    
-    url = f"{settings.SUPABASE_URL}/auth/v1/logout"
-    headers = {**_base_headers(), "Authorization": f"Bearer {access_token}"}
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        response = await client.post(url, headers=headers)
-    if response.status_code >= 400 and response.status_code != 401:
-       
-        raise AuthProviderError(f"Logout failed: {response.text}")

@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.core import supabase_client
 from app.core.exceptions import ConflictError, UnauthorizedError
-from app.models.enums import UserRole
+from app.models.enums import NotificationEventType, UserRole
 from app.repositories import user_repository
+from app.services import notification_service
 
 
 async def register(db: Session, *, email: str, password: str, full_name: str | None, role: UserRole) -> dict:
@@ -30,6 +31,15 @@ async def register(db: Session, *, email: str, password: str, full_name: str | N
             "expires_in": supabase_result.get("expires_in", 3600),
         }
 
+    notification_service.emit(
+        NotificationEventType.USER_REGISTERED,
+        local_user.id,
+        {"full_name": local_user.full_name or local_user.email},
+        idempotency_key=notification_service.build_idempotency_key(
+            NotificationEventType.USER_REGISTERED, local_user.id
+        ),
+    )
+
     return {"local_user": local_user, "session": session}
 
 
@@ -38,6 +48,19 @@ async def login(db: Session, *, email: str, password: str) -> dict:
     local_user = user_repository.get_by_email(db, email)
     if local_user is None:
         raise UnauthorizedError("Account exists in the auth provider but not in the application database.")
+
+    
+    notification_service.emit(
+        NotificationEventType.LOGIN_DETECTED,
+        local_user.id,
+        {"full_name": local_user.full_name or local_user.email},
+        idempotency_key=notification_service.build_idempotency_key(
+            NotificationEventType.LOGIN_DETECTED,
+            local_user.id,
+            session.get("session_id") or session.get("access_token", "")[-32:],
+        ),
+    )
+
     return {"local_user": local_user, "session": session}
 
 
@@ -50,10 +73,3 @@ _revoked_tokens: set[str] = set()
 
 async def logout(access_token: str) -> None:
     _revoked_tokens.add(access_token)
-
-    await supabase_client.sign_out(access_token)
-
-
-def is_token_revoked(access_token: str) -> bool:
-    return access_token in _revoked_tokens
-
